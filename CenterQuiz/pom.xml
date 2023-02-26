@@ -16,7 +16,7 @@
     <groupId>sd.api.rest</groupId>
     <artifactId>CenterQuiz</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>CenterQuiz</name>
+    <name>CenterQuiz-Hospedagem</name>
     <description>Sistema de gerenciamento questionários</description>
 
     <properties>

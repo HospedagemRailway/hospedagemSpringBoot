@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -603,70 +604,29 @@ public class GerenciadorCenterQuizController {
         }
     }
 
-    /*@PostMapping(
-            value = "/usuario-comum/responder-questionario",
-            produces = "application/json"
-    )
-    public ResponseEntity<JSONObject> responderQuestionario(
-            @RequestBody JSONObject respostaJsonObject
-    ) {
-        Long idQuestao = null;
-        if (respostaJsonObject.has("respostas")) {
-            JSONArray respostas = respostaJsonObject.getJSONArray("respostas");
-            if (respostas.length() > 0) {
-                idQuestao = Long.valueOf(respostas.getJSONObject(0).get("idQuestao").toString());
+    @PutMapping(value = "/adm/registro-questionario/{idBancoDeQuestoes}", produces = "application/json")
+    public ResponseEntity<?> editarRegistroQuestionarioAdm(@PathVariable Long idBancoDeQuestoes, @RequestBody BancoDeQuestoes bancoDeQuestoes) {
+        if (obterTipoUsuario() == TipoUsuario.ADM) {
+            Optional<BancoDeQuestoes> bancoDeQuestoesOptional = bancoDeQuestoesRepository.findById(idBancoDeQuestoes);
+            if (bancoDeQuestoesOptional.isPresent()) {
+                BancoDeQuestoes bancoDeQuestoesSalvo = bancoDeQuestoesOptional.get();
+                bancoDeQuestoesSalvo.setIdQuestionario(bancoDeQuestoes.getIdQuestionario());
+                bancoDeQuestoesSalvo.setQuestoes(bancoDeQuestoes.getQuestoes());
+                BancoDeQuestoes bancoDeQuestoesAtualizado = bancoDeQuestoesRepository.save(bancoDeQuestoesSalvo);
+                return new ResponseEntity<BancoDeQuestoes>(bancoDeQuestoesAtualizado, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<String>("Banco de questões não encontrado", HttpStatus.NOT_FOUND);
             }
+        } else {
+            return new ResponseEntity<String>("Usuário não autorizado para este end-point", HttpStatus.UNAUTHORIZED);
         }
+    }
 
-        if (idQuestao == null) {
-            JSONObject retorno = new JSONObject();
-            retorno.put("sucesso", false);
-            retorno.put("feedback", "ID da questão não fornecido");
-            return new ResponseEntity<>(retorno, HttpStatus.BAD_REQUEST);
-        }
-
-        Optional<Questao> questaoOptional = questaoRepository.findById(idQuestao);
-        if (!questaoOptional.isPresent()) {
-            // Questão não encontrada
-            JSONObject retorno = new JSONObject();
-            retorno.put("sucesso", false);
-            retorno.put("feedback", "Questão não encontrada");
-            return new ResponseEntity<>(retorno, HttpStatus.BAD_REQUEST);
-        }
-
-        Questao questao = questaoOptional.get();
-        List<Integer> respostasCorretas = questao.getRespostas();
-
-        JSONArray respostasDoUsuarioJsonArray = respostaJsonObject.getJSONArray("respostas");
-        List<Long> respostasDoUsuario = new ArrayList<>();
-        for (int i = 0; i < respostasDoUsuarioJsonArray.length(); i++) {
-            respostasDoUsuario.add(respostasDoUsuarioJsonArray.getLong(i));
-        }
-
-        if (respostasDoUsuario.size() != respostasCorretas.size()) {
-            JSONObject retorno = new JSONObject();
-            retorno.put("sucesso", false);
-            retorno.put("feedback", "Quantidade de respostas incorreta");
-            return new ResponseEntity<>(retorno, HttpStatus.BAD_REQUEST);
-        }
-
-        boolean respostaCorreta = respostasCorretas.containsAll(respostasDoUsuario);
-
-        JSONObject retorno = new JSONObject();
-        retorno.put("sucesso", respostaCorreta);
-        retorno.put("feedback", respostaCorreta ? "Parabéns, você acertou!" : "Resposta errada! Por favor, tente novamente.");
-
-        if (respostaCorreta) {
-            ConclusaoQuestao conclusaoQuestao = new ConclusaoQuestao();
-            conclusaoQuestao.setIdQuestao(idQuestao);
-            conclusaoQuestao.setIdUsuario(obterIdUsuarioLogado());
-            conclusaoQuestao.setDataConclusao(new Date());
-
-            conclusaoQuestaoRepository.save(conclusaoQuestao);
-        }
-
-        return new ResponseEntity<>(retorno, HttpStatus.OK);
-    }*/
+    /**
+     *
+     * @param respostaJsonObject
+     * @return
+     */
     @PostMapping(
             value = "/usuario-comum/responder-questionario",
             produces = "application/json"
@@ -835,9 +795,10 @@ public class GerenciadorCenterQuizController {
                 HttpStatus.OK
         );
     }
-    
+
     /**
-     * Retorna todas as conclusões de todas as questões de um deterninado usuário
+     * Retorna todas as conclusões de todas as questões de um deterninado
+     * usuário
      *
      * @param jsonRequest
      * @return
